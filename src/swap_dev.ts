@@ -1,31 +1,35 @@
 
 import { Connection, Keypair, PublicKey,} from "@solana/web3.js";
 import { Liquidity, Token, TokenAmount,Percent } from "@raydium-io/raydium-sdk";
-  
-import {getTokenAccountsByOwner, fetchAllPoolKeys, fetchPoolKeys} from "./mainnet"
 
 // @ts-ignore
 import bs58 from "bs58"
 
+import {getTokenAccountsByOwner, fetchAllPoolKeys, fetchPoolKeys} from "./devnet"
+
 (async () => {
-    const connection = new Connection("https://solana-api.projectserum.com", "confirmed");
+    const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
     // change to your privateKey
-    // const secretKey = bs58.decode('xxxxxxxxxxxxxxxxxxxxxxxx')
     // const secretKey = Buffer.from(JSON.parse('[1,1,1,1,1]'))
-
     const secretKey = bs58.decode('3qswEeCJcA9ogpN3JEuXBtmnU35YPzSxBwzrk6sdTPhogMJ64WuabU9XWg2yUegJvv1qupYPqo2jQrrK26N7HGsD')
 
     const ownerKeypair = Keypair.fromSecretKey( secretKey )
+
     const owner = ownerKeypair.publicKey;
     console.log(owner.toString());
 
     const tokenAccounts = await getTokenAccountsByOwner(connection, owner)
+    console.log("tokenAccounts.length:", tokenAccounts.length)
 
-    const RAY_USDC = "6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg"
-    // const allPoolKeys = await fetchAllPoolKeys(connection);
-    // const poolKeys = allPoolKeys.find((item) => item.id.toBase58() === RAY_USDC)
+    const allPoolKeys = await fetchAllPoolKeys(connection);
+    console.log("allPoolKeys.length:", allPoolKeys.length)
 
+    allPoolKeys.forEach((item) => {
+      console.log(item.programId.toBase58(), item.marketProgramId.toBase58(), item.id.toBase58(),)
+    })
+
+    const RAY_USDC = "ELSGBb45rAQNsMTVzwjUqL8vBophWhPn4rNbqwxenmqY"
     const poolKeys = await fetchPoolKeys(connection, new PublicKey(RAY_USDC))
     if (poolKeys){
       
@@ -43,8 +47,12 @@ import bs58 from "bs58"
         fee,
       } = Liquidity.computeAmountOut({ poolKeys, poolInfo, amountIn, currencyOut, slippage, })
 
-      //@ts-ignore
+      
+      // @ts-ignore
       console.log(amountOut.toFixed(), minAmountOut.toFixed(), currentPrice.toFixed(), executionPrice.toFixed(), priceImpact.toFixed(), fee.toFixed())
+      
+      // const minAmountOut = new TokenAmount(new Token(poolKeys.quoteMint, 6), 1000000)
+      
       const {transaction, signers} = await Liquidity.makeSwapTransaction({
           connection,
           poolKeys,
@@ -63,6 +71,6 @@ import bs58 from "bs58"
           {skipPreflight: true}
       );
 
-      console.log(`https://solscan.io/tx/${txid}`)
+      console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`)
     }
 })()
