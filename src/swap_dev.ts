@@ -26,16 +26,27 @@ import {getTokenAccountsByOwner, fetchAllPoolKeys, fetchPoolKeys} from "./devnet
     console.log("allPoolKeys.length:", allPoolKeys.length)
 
     allPoolKeys.forEach((item) => {
-      console.log(item.programId.toBase58(), item.marketProgramId.toBase58(), item.id.toBase58(),)
+      // if (item.baseMint.toBase58() == WSOL.mint || item.quoteMint.toBase58() == WSOL.mint )
+        console.log(item.id.toBase58(),item.baseMint.toBase58(),item.quoteMint.toBase58())
     })
 
-    const RAY_USDC = "ELSGBb45rAQNsMTVzwjUqL8vBophWhPn4rNbqwxenmqY"
-    const poolKeys = await fetchPoolKeys(connection, new PublicKey(RAY_USDC))
+    // SOL-USDT
+    const POOL_ID = "384zMi9MbUKVUfkUdrnuMfWBwJR9gadSxYimuXeJ9DaJ"
+
+    // RAY_USDC
+    // const POOL_ID = "ELSGBb45rAQNsMTVzwjUqL8vBophWhPn4rNbqwxenmqY"
+
+    const poolKeys = await fetchPoolKeys(connection, new PublicKey(POOL_ID))
     if (poolKeys){
       
       const poolInfo = await Liquidity.fetchInfo({connection, poolKeys})
-      const amountIn = new TokenAmount(new Token(poolKeys.baseMint, 6), 1000000)
-      const currencyOut = new Token(poolKeys.quoteMint,6)
+
+      // real amount = 1000000 / 10**poolInfo.baseDecimals
+      const amountIn = new TokenAmount(new Token(poolKeys.baseMint, poolInfo.baseDecimals), 1000000)
+
+      const currencyOut = new Token(poolKeys.quoteMint, poolInfo.quoteDecimals)
+
+      // 5% slippage
       const slippage = new Percent(5, 100)
 
       const {
@@ -51,7 +62,7 @@ import {getTokenAccountsByOwner, fetchAllPoolKeys, fetchPoolKeys} from "./devnet
       // @ts-ignore
       console.log(amountOut.toFixed(), minAmountOut.toFixed(), currentPrice.toFixed(), executionPrice.toFixed(), priceImpact.toFixed(), fee.toFixed())
       
-      // const minAmountOut = new TokenAmount(new Token(poolKeys.quoteMint, 6), 1000000)
+      // const minAmountOut = new TokenAmount(new Token(poolKeys.quoteMint, poolInfo.quoteDecimals), 1000000)
       
       const {transaction, signers} = await Liquidity.makeSwapTransaction({
           connection,

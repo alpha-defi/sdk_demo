@@ -4,7 +4,8 @@ import {
     Liquidity,  Market,  SPL_ACCOUNT_LAYOUT,
     TOKEN_PROGRAM_ID, Percent, GetMultipleAccountsInfoConfig, 
     LiquidityPoolKeys, LIQUIDITY_VERSION_TO_STATE_LAYOUT,
-    LiquidityStateLayout, LiquidityAssociatedPoolKeys, getMultipleAccountsInfo, LIQUIDITY_STATE_LAYOUT_V4, findProgramAddress 
+    LiquidityStateLayout, LiquidityAssociatedPoolKeys, getMultipleAccountsInfo, 
+    LIQUIDITY_STATE_LAYOUT_V4, findProgramAddress 
 } from "@raydium-io/raydium-sdk";
   
 
@@ -188,18 +189,13 @@ export async function fetchAllPoolKeys(
     config?: GetMultipleAccountsInfoConfig,
   ): Promise<LiquidityPoolKeys[]> {
     // supported versions
-    const supported = Object.keys(LIQUIDITY_VERSION_TO_STATE_LAYOUT).map((v) => {
-      const version = Number(v);
-      const serumVersion = 3;
-      const serumProgramId = SERUM_PROGRAM_ID_V3
-      return {
-        version,
-        programId: getProgramId(version),
-        serumVersion,
-        serumProgramId,
-        stateLayout: getStateLayout(version),
-      };
-    });
+    const supported = [{
+        version: 4,
+        programId: LIQUIDITY_PROGRAM_ID_V4,
+        serumVersion: 3,
+        serumProgramId: SERUM_PROGRAM_ID_V3,
+        stateLayout: LIQUIDITY_STATE_LAYOUT_V4,
+    }]
 
     let poolsAccountInfo: {
       pubkey: PublicKey;
