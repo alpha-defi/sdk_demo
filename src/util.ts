@@ -1,6 +1,6 @@
 
 import { Connection, Keypair, PublicKey,} from "@solana/web3.js";
-import {  TOKEN_PROGRAM_ID, SPL_ACCOUNT_LAYOUT,  TokenAccount, LiquidityPoolKeys, Liquidity, TokenAmount, Token, Percent, Currency } from "@raydium-io/raydium-sdk";
+import {  TOKEN_PROGRAM_ID, SPL_ACCOUNT_LAYOUT,  TokenAccount, LiquidityPoolKeys, Liquidity, Route, TokenAmount, Token, Percent, Currency } from "@raydium-io/raydium-sdk";
 
 
 export async function getTokenAccountsByOwner(
@@ -156,4 +156,52 @@ export async function removeLiquidity(connection: Connection, poolKeys: Liquidit
     console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`)
   }
   console.log('removeLiquidity end')
+}
+
+export async function routeSwap(connection: Connection, fromPoolKeys: LiquidityPoolKeys, toPoolKeys: LiquidityPoolKeys, ownerKeypair: Keypair, tokenAccounts: TokenAccount[]){
+  console.log('route swap start')
+
+  const owner = ownerKeypair.publicKey
+  const fromPoolInfo = await Liquidity.fetchInfo({connection, poolKeys:fromPoolKeys})
+  const toPoolInfo = await Liquidity.fetchInfo({connection, poolKeys:toPoolKeys})
+  const amountIn = new TokenAmount(new Token(fromPoolKeys.baseMint, fromPoolInfo.baseDecimals), 1, false)
+  const currencyOut = new Token(toPoolKeys.quoteMint,toPoolInfo.quoteDecimals)
+  // 5% slippage
+  const slippage = new Percent(5, 100)
+
+  const { amountOut, minAmountOut, executionPrice, priceImpact, fee } = Route.computeAmountOut({
+    fromPoolKeys,
+    toPoolKeys,
+    fromPoolInfo,
+    toPoolInfo,
+    amountIn,
+    currencyOut,
+    slippage,
+  });
+
+  // @ts-ignore
+  console.log(`route swap: ${fromPoolKeys.id.toBase58()}, amountIn: ${amountIn.toFixed()}, amountOut: ${amountOut.toFixed()}, executionPrice: ${executionPrice!.toFixed()}`,)
+
+  const { swapTransaction } =
+    await Route.makeSwapTransaction({
+      connection,
+      fromPoolKeys,
+      toPoolKeys,
+      userKeys: {
+        tokenAccounts,
+        owner,
+    },
+      amountIn,
+      amountOut,
+      fixedSide: "in",
+    });
+
+  const txid = await connection.sendTransaction(
+      swapTransaction!.transaction,
+      [...swapTransaction!.signers, ownerKeypair],
+      {skipPreflight: true}
+  );
+
+  console.log(`https://solscan.io/tx/${txid}`)
+  console.log('route swap end')
 }
