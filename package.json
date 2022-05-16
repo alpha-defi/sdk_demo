@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "src/swap.ts",
   "scripts": {
-    "start": "ts-node src/swap.ts",
-    "dev": "ts-node src/swap_dev.ts"
+    "start": "ts-node src/demo_mainnet.ts",
+    "dev": "ts-node src/demo_devnet.ts"
   },
   "author": "Carl",
   "license": "MIT",

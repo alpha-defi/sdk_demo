@@ -1,9 +1,9 @@
 
 import {AccountInfo, Connection, PublicKey,} from "@solana/web3.js";
 import { 
-    Liquidity,  Market,  SPL_ACCOUNT_LAYOUT,
-    TOKEN_PROGRAM_ID, Percent, GetMultipleAccountsInfoConfig, 
-    LiquidityPoolKeys, LIQUIDITY_VERSION_TO_STATE_LAYOUT,
+    Liquidity,  Market,
+    GetMultipleAccountsInfoConfig, 
+    LiquidityPoolKeys,
     LiquidityStateLayout, LiquidityAssociatedPoolKeys, getMultipleAccountsInfo, 
     LIQUIDITY_STATE_LAYOUT_V4, findProgramAddress 
 } from "@raydium-io/raydium-sdk";
@@ -156,32 +156,6 @@ async function getAssociatedPoolKeys({
     marketId,
     marketAuthority,
   };
-}
-
-export async function getTokenAccountsByOwner(
-  connection: Connection,
-  owner: PublicKey,
-) {
-  const tokenResp = await connection.getTokenAccountsByOwner(
-    owner,
-    {
-      programId: TOKEN_PROGRAM_ID
-    },
-  );
-
-  const accounts: {
-    pubkey: PublicKey;
-    accountInfo: any;
-  }[] = [];
-
-  for (const { pubkey, account } of tokenResp.value) {
-    accounts.push({
-      pubkey,
-      accountInfo:SPL_ACCOUNT_LAYOUT.decode(account.data)
-    });
-  }
-
-  return accounts;
 }
 
 export async function fetchAllPoolKeys(

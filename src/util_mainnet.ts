@@ -1,33 +1,7 @@
 import {Connection, PublicKey,} from "@solana/web3.js";
-import { Liquidity,  Market,  SPL_ACCOUNT_LAYOUT,
-  SERUM_PROGRAM_ID_V3, LIQUIDITY_PROGRAM_ID_V4,  TOKEN_PROGRAM_ID } from "@raydium-io/raydium-sdk";
+import { Liquidity,  Market,
+  SERUM_PROGRAM_ID_V3, LIQUIDITY_PROGRAM_ID_V4 } from "@raydium-io/raydium-sdk";
   
-
-export async function getTokenAccountsByOwner(
-  connection: Connection,
-  owner: PublicKey,
-) {
-  const tokenResp = await connection.getTokenAccountsByOwner(
-    owner,
-    {
-      programId: TOKEN_PROGRAM_ID
-    },
-  );
-
-  const accounts: {
-    pubkey: PublicKey;
-    accountInfo: any;
-  }[] = [];
-
-  for (const { pubkey, account } of tokenResp.value) {
-    accounts.push({
-      pubkey,
-      accountInfo:SPL_ACCOUNT_LAYOUT.decode(account.data)
-    });
-  }
-
-  return accounts;
-}
 
 
 export async function fetchPoolKeys(
