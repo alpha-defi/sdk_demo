@@ -98,7 +98,7 @@ export async function addLiquidity(connection: Connection, poolKeys: LiquidityPo
     maxAnotherAmount
   } = Liquidity.computeAnotherAmount({ poolKeys, poolInfo, amount, anotherCurrency, slippage, })
 
-  console.log(`addLiquidity: ${poolKeys.id.toBase58()}, base amount: ${amount.toFixed()}, quote amount: ${maxAnotherAmount.toFixed()}`,)
+  console.log(`addLiquidity: ${poolKeys.id.toBase58()}, base amount: ${amount.toFixed()}, quote amount: ${anotherAmount.toFixed()}`,)
   
   const amountInB = new TokenAmount(new Token(poolKeys.quoteMint, poolInfo.quoteDecimals), maxAnotherAmount.toFixed(), false)
   const { transaction, signers } = await Liquidity.makeAddLiquidityTransaction({
