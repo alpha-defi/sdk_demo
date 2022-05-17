@@ -1,7 +1,7 @@
 
 import { Connection, Keypair, PublicKey,} from "@solana/web3.js";
 import {fetchAllPoolKeys, fetchPoolKeys} from "./util_mainnet"
-import { getTokenAccountsByOwner, swap, addLiquidity, removeLiquidity } from "./util";
+import { getTokenAccountsByOwner, swap, addLiquidity, removeLiquidity, routeSwap } from "./util";
 
 // @ts-ignore
 import bs58 from "bs58"
@@ -22,10 +22,12 @@ import bs58 from "bs58"
 
     const tokenAccounts = await getTokenAccountsByOwner(connection, owner)
 
+    const FIDA_RAY = "2dRNngAm729NzLbb1pzgHtfHvPqR4XHFmFyYK78EfEeX"
     const RAY_USDC = "6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg"
     // const allPoolKeys = await fetchAllPoolKeys(connection);
     // const poolKeys = allPoolKeys.find((item) => item.id.toBase58() === RAY_USDC)
 
+    const fromPoolKeys = await fetchPoolKeys(connection, new PublicKey(FIDA_RAY))
     const poolKeys = await fetchPoolKeys(connection, new PublicKey(RAY_USDC))
 
     await swap(connection, poolKeys, ownerKeypair, tokenAccounts)
@@ -33,4 +35,6 @@ import bs58 from "bs58"
     await addLiquidity(connection, poolKeys, ownerKeypair, tokenAccounts)
 
     await removeLiquidity(connection, poolKeys, ownerKeypair, tokenAccounts)
+
+    await routeSwap(connection, fromPoolKeys, poolKeys, ownerKeypair, tokenAccounts)
 })()

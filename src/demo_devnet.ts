@@ -5,7 +5,7 @@ import { Connection, Keypair, PublicKey,} from "@solana/web3.js";
 import bs58 from "bs58"
 
 import {fetchAllPoolKeys, fetchPoolKeys} from "./util_devnet"
-import { getTokenAccountsByOwner, swap, addLiquidity, removeLiquidity } from "./util";
+import { getTokenAccountsByOwner, swap, addLiquidity, removeLiquidity, routeSwap } from "./util";
 
 
 async function getAllAmmPools(connection: Connection){
@@ -41,9 +41,12 @@ async function getAllAmmPools(connection: Connection){
     // SOL-USDT
     // const POOL_ID = "384zMi9MbUKVUfkUdrnuMfWBwJR9gadSxYimuXeJ9DaJ"
 
+    const FIDA_RAY = "2dRNngAm729NzLbb1pzgHtfHvPqR4XHFmFyYK78EfEeX"
+
     // RAY_USDC
     const POOL_ID = "ELSGBb45rAQNsMTVzwjUqL8vBophWhPn4rNbqwxenmqY"
 
+    const fromPoolKeys = await fetchPoolKeys(connection, new PublicKey(FIDA_RAY))
     const poolKeys = await fetchPoolKeys(connection, new PublicKey(POOL_ID))
 
     await swap(connection, poolKeys, ownerKeypair, tokenAccounts)
@@ -51,5 +54,7 @@ async function getAllAmmPools(connection: Connection){
     await addLiquidity(connection, poolKeys, ownerKeypair, tokenAccounts)
 
     await removeLiquidity(connection, poolKeys, ownerKeypair, tokenAccounts)
+
+    await routeSwap(connection, fromPoolKeys, poolKeys, ownerKeypair, tokenAccounts)
 
 })()
