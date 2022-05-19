@@ -1,7 +1,7 @@
 
 import { Connection, Keypair, PublicKey,} from "@solana/web3.js";
-import {fetchAllPoolKeys, fetchPoolKeys} from "./util_mainnet"
-import { getTokenAccountsByOwner, swap, addLiquidity, removeLiquidity, routeSwap } from "./util";
+import {fetchAllPoolKeys, fetchPoolKeys, getRouteRelated} from "./util_mainnet"
+import { getTokenAccountsByOwner, swap, addLiquidity, removeLiquidity, routeSwap, tradeSwap } from "./util";
 
 // @ts-ignore
 import bs58 from "bs58"
@@ -29,6 +29,9 @@ import bs58 from "bs58"
 
     const fromPoolKeys = await fetchPoolKeys(connection, new PublicKey(FIDA_RAY))
     const poolKeys = await fetchPoolKeys(connection, new PublicKey(RAY_USDC))
+    const FIDA_MINT_ID = fromPoolKeys.baseMint;
+    const USDC_MINT_ID = poolKeys.quoteMint;
+    const relatedPoolKeys = await getRouteRelated(connection, FIDA_MINT_ID, USDC_MINT_ID)
 
     await swap(connection, poolKeys, ownerKeypair, tokenAccounts)
 
@@ -37,4 +40,6 @@ import bs58 from "bs58"
     await removeLiquidity(connection, poolKeys, ownerKeypair, tokenAccounts)
 
     await routeSwap(connection, fromPoolKeys, poolKeys, ownerKeypair, tokenAccounts)
+
+    await tradeSwap(connection, FIDA_MINT_ID, USDC_MINT_ID, relatedPoolKeys, ownerKeypair, tokenAccounts)
 })()

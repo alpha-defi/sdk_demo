@@ -1,6 +1,6 @@
 
 import { Connection, Keypair, PublicKey,} from "@solana/web3.js";
-import {  TOKEN_PROGRAM_ID, SPL_ACCOUNT_LAYOUT,  TokenAccount, LiquidityPoolKeys, Liquidity, Route, TokenAmount, Token, Percent, Currency } from "@raydium-io/raydium-sdk";
+import {  TOKEN_PROGRAM_ID, SPL_ACCOUNT_LAYOUT,  TokenAccount, LiquidityPoolKeys, Liquidity, Route, Trade, TokenAmount, Token, Percent, Currency } from "@raydium-io/raydium-sdk";
 
 
 export async function getTokenAccountsByOwner(
@@ -204,4 +204,51 @@ export async function routeSwap(connection: Connection, fromPoolKeys: LiquidityP
 
   console.log(`https://solscan.io/tx/${txid}`)
   console.log('route swap end')
+}
+
+export async function tradeSwap(connection: Connection, tokenInMint: PublicKey, tokenOutMint: PublicKey, relatedPoolKeys: LiquidityPoolKeys[], ownerKeypair: Keypair, tokenAccounts: TokenAccount[]){
+  console.log('trade swap start')
+
+  const owner = ownerKeypair.publicKey
+  const amountIn = new TokenAmount(new Token(tokenInMint, 6), 1, false)
+  const currencyOut = new Token(tokenOutMint,6)
+  // 5% slippage
+  const slippage = new Percent(5, 100)
+  const pools = await Promise.all(relatedPoolKeys.map(async(poolKeys) => {
+    const poolInfo = await Liquidity.fetchInfo({connection, poolKeys})
+    return {
+      poolKeys,
+      poolInfo
+    }
+  }))
+
+  const { amountOut, minAmountOut, executionPrice, currentPrice, priceImpact, routes, routeType, fee } = Trade.getBestAmountOut({
+    pools,
+    currencyOut,
+    amountIn,
+    slippage
+  })
+  console.log(`trade swap: amountIn: ${amountIn.toFixed()}, amountOut: ${amountOut.toFixed()}, executionPrice: ${executionPrice!.toFixed()}, ${routeType}`,)
+
+  const { setupTransaction, tradeTransaction } = await Trade.makeTradeTransaction({
+    connection,
+    routes,
+    routeType,
+    userKeys: {
+      tokenAccounts,
+      owner
+    },
+    amountIn,
+    amountOut,
+    fixedSide: 'in',
+  })
+
+  const txid = await connection.sendTransaction(
+      tradeTransaction!.transaction,
+      [...tradeTransaction!.signers, ownerKeypair],
+      {skipPreflight: true}
+  );
+
+  console.log(`https://solscan.io/tx/${txid}?cluster=devnet`)
+  console.log('trade swap end')
 }
